@@ -1,7 +1,21 @@
+import org.overrun.*
+
+buildscript {
+    repositories {
+        mavenLocal()
+    }
+    dependencies {
+        classpath 'io.github.over-run:window_gradle_plugin:1.0.0.0'
+    }
+}
+
 plugins {
     id 'java-platform'
     id 'maven-publish'
+    id ''
 }
+
+Win32 name = (Win32) project.getExtensions().getByName("win32")
 
 subprojects {
     if (project.name != "window_gradle_plugin") {
