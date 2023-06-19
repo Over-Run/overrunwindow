@@ -1,0 +1,93 @@
+plugins {
+    id 'java-platform'
+    id 'maven-publish'
+}
+
+subprojects {
+    if (project.name != "window_gradle_plugin") {
+        apply plugin: 'java-library'
+        apply plugin: 'idea'
+        apply plugin: 'signing'
+
+        group = maven_group
+        version = project_version
+
+        repositories {
+            mavenCentral()
+            maven { url 'https://maven.aliyun.com/repository/central' }
+            // temporary maven repositories
+            maven { url 'https://s01.oss.sonatype.org/content/repositories/releases' }
+            maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots' }
+        }
+
+        dependencies {
+            compileOnly 'org.jetbrains:annotations:24.0.1'
+        }
+
+        def targetJavaVersion = 21
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding encode
+            options.compilerArgs += '--enable-preview'
+            if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+                options.release.set(targetJavaVersion)
+            }
+        }
+
+        java {
+            def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+            if (JavaVersion.current() < javaVersion) {
+                toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+            }
+
+            withJavadocJar()
+            withSourcesJar()
+        }
+
+        tasks.withType(Javadoc).configureEach {
+            if (options instanceof CoreJavadocOptions) {
+                options.addBooleanOption('-enable-preview', true)
+                options.addStringOption('source', sourceCompatibility.toString())
+            }
+            failOnError = false
+            options.encoding 'UTF-8'
+            options.charSet 'UTF-8'
+            options.author true
+            options.locale 'en_US'
+            options.links "https://docs.oracle.com/en/java/javase/${sourceCompatibility}/docs/api/"
+            options.windowTitle "OverrunGL $project_version Javadoc"
+        }
+
+        jar {
+            manifestContentCharset 'utf-8'
+            metadataCharset 'utf-8'
+            from 'LICENSE'
+            manifest.attributes(
+                    'Specification-Title': archives_base_name,
+                    'Specification-Vendor': 'Overrun Organization',
+                    'Specification-Version': '0',
+                    'Implementation-Title': archives_base_name,
+                    'Implementation-Vendor': 'Overrun Organization',
+                    'Implementation-Version': archiveVersion
+            )
+        }
+
+        sourcesJar {
+            dependsOn classes
+            archiveClassifier.set 'sources'
+            from sourceSets.main.allSource, 'LICENSE'
+        }
+
+        javadocJar {
+            dependsOn javadoc
+            archiveClassifier.set 'javadoc'
+            from javadoc, 'LICENSE'
+        }
+
+        artifacts {
+            archives javadocJar, sourcesJar
+        }
+
+        idea.module.inheritOutputDirs = true
+
+    }
+}

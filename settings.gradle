@@ -1,0 +1,19 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+    }
+}
+
+rootProject.name = archives_base_name
+
+include 'window_gradle_plugin'
+project(':window_gradle_plugin').projectDir = file("gradle/plugin")
+
+file('modules/overrunwindow/').eachDir {
+    dir ->
+        include "$dir.name"
+        project(":$dir.name").projectDir = dir
+}
